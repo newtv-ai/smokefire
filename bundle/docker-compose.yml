@@ -1,9 +1,28 @@
 name: smokefire
 
 services:
-  smokefire:
-    image: smokefire:1.0.0-cpu
+  go2rtc:
+    image: alexxit/go2rtc:1.9.9
+    pull_policy: never
     restart: unless-stopped
+    volumes:
+      - go2rtc-cfg:/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:1984/api/streams"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  smokefire:
+    image: ${SMOKEFIRE_IMAGE:-smokefire:1.0.0-cpu}
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      go2rtc:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${SMOKEFIRE_BIND_IP:-127.0.0.1}:${SMOKEFIRE_PORT:-8600}:8600"
     environment:
@@ -15,8 +34,23 @@ services:
       SMOKEFIRE_WEBHOOK_ALLOWED_HOSTS: ${SMOKEFIRE_WEBHOOK_ALLOWED_HOSTS:-}
       SMOKEFIRE_CAMERA_ALLOWED_SCHEMES: ${SMOKEFIRE_CAMERA_ALLOWED_SCHEMES:-rtsp}
       SMOKEFIRE_CAMERA_ALLOWED_NETWORKS: ${SMOKEFIRE_CAMERA_ALLOWED_NETWORKS:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7}
-      SMOKEFIRE_GO2RTC_ENABLED: "false"
-      SMOKEFIRE_UPSTREAM_GO2RTC_ENABLED: "false"
+
+      # Mode B: built-in go2rtc. Cameras added in smokefire are registered here
+      # automatically; AI and recording share the same upstream camera producer.
+      SMOKEFIRE_GO2RTC_ENABLED: ${SMOKEFIRE_GO2RTC_ENABLED:-false}
+      SMOKEFIRE_GO2RTC_API: http://go2rtc:1984
+      SMOKEFIRE_GO2RTC_RTSP: rtsp://go2rtc:8554
+      SMOKEFIRE_GO2RTC_TIMEOUT_SEC: ${SMOKEFIRE_GO2RTC_TIMEOUT_SEC:-3}
+      SMOKEFIRE_GO2RTC_SYNC_INTERVAL_SEC: ${SMOKEFIRE_GO2RTC_SYNC_INTERVAL_SEC:-30}
+
+      # Mode C: customer already has go2rtc. One endpoint imports all main streams
+      # from GET /api/streams; no per-camera RTSP entry is required.
+      SMOKEFIRE_UPSTREAM_GO2RTC_ENABLED: ${SMOKEFIRE_UPSTREAM_GO2RTC_ENABLED:-false}
+      SMOKEFIRE_UPSTREAM_GO2RTC_API: ${SMOKEFIRE_UPSTREAM_GO2RTC_API:-}
+      SMOKEFIRE_UPSTREAM_GO2RTC_RTSP: ${SMOKEFIRE_UPSTREAM_GO2RTC_RTSP:-}
+      SMOKEFIRE_UPSTREAM_GO2RTC_AUTO_DISCOVER: ${SMOKEFIRE_UPSTREAM_GO2RTC_AUTO_DISCOVER:-true}
+      SMOKEFIRE_UPSTREAM_GO2RTC_SYNC_INTERVAL_SEC: ${SMOKEFIRE_UPSTREAM_GO2RTC_SYNC_INTERVAL_SEC:-300}
+
       SMOKEFIRE_INFER_WORKERS: ${SMOKEFIRE_INFER_WORKERS:-4}
       SMOKEFIRE_INFER_QUEUE_MAX: ${SMOKEFIRE_INFER_QUEUE_MAX:-256}
       SMOKEFIRE_INFER_BATCH_MAX: ${SMOKEFIRE_INFER_BATCH_MAX:-8}
@@ -25,6 +59,7 @@ services:
       SMOKEFIRE_INFER_TIMEOUT_SEC: ${SMOKEFIRE_INFER_TIMEOUT_SEC:-10}
       SMOKEFIRE_INFER_HARD_STALL_SEC: ${SMOKEFIRE_INFER_HARD_STALL_SEC:-60}
       YOLO_INFER_HALF: ${YOLO_INFER_HALF:-true}
+      YOLO_GPU_INFER_CONCURRENCY: ${YOLO_GPU_INFER_CONCURRENCY:-}
       SMOKEFIRE_STREAM_OPEN_CONCURRENCY: ${SMOKEFIRE_STREAM_OPEN_CONCURRENCY:-8}
       SMOKEFIRE_STREAM_OPEN_TIMEOUT_SEC: ${SMOKEFIRE_STREAM_OPEN_TIMEOUT_SEC:-8}
       SMOKEFIRE_STREAM_READ_TIMEOUT_SEC: ${SMOKEFIRE_STREAM_READ_TIMEOUT_SEC:-5}
@@ -43,4 +78,5 @@ services:
 
 volumes:
   smokefire-data:
+  go2rtc-cfg:
 

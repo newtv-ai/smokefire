@@ -66,7 +66,7 @@ Use the site URL supplied by the implementer when remote access has been configu
 
 ### 2.2 Recommended first-use sequence
 
-1. Open Camera Management and add the first camera.
+1. Open Camera Management. For an existing-go2rtc site, first confirm that main streams with the Upstream badge were imported automatically; add a camera manually only in the other modes.
 2. Wait for Starting or Reconnecting to change to Online.
 3. Open Live Wall and confirm the image, name, and camera view.
 4. Trigger a controlled alert using authorized test material.
@@ -103,7 +103,16 @@ The wall automatically lays out cameras for the browser window. Use Previous and
 
 ## 4. Camera Management
 
-### 4.1 Add a camera
+### 4.1 Identify the camera source first
+
+Camera Management can contain two types of records:
+
+- **Upstream cameras:** the implementer connected smokefire to the customer's existing go2rtc. All main streams are read automatically and show an Upstream badge. Users do not copy RTSP URLs one by one.
+- **Manual cameras:** users add these in direct RTSP or bundled-go2rtc mode.
+
+The synchronizer owns upstream camera names and source URLs. A new go2rtc main stream appears after the next sync; a missing stream is disabled and enabled again when it returns. Matching `_sub`, `-sub`, and `_sd` substreams are deduplicated when a main stream exists. Do not create a manual camera with the same name. If names or counts are wrong, ask the implementer to check go2rtc instead of re-entering every feed.
+
+### 4.2 Add a manual camera
 
 1. Select Add Camera.
 2. Enter a unique, recognizable name.
@@ -119,7 +128,7 @@ Example RTSP URL:
 rtsp://user:password@192.168.1.20:554/stream1
 ```
 
-### 4.2 Main fields
+### 4.3 Main fields
 
 | Field | Purpose | Guidance |
 |---|---|---|
@@ -132,18 +141,20 @@ rtsp://user:password@192.168.1.20:554/stream1
 | Pre/Post seconds | Evidence around an alert | Increasing them consumes more storage |
 | Webhook | Per-camera notification target | Test real delivery after saving |
 
-### 4.3 Edit, disable, and delete
+### 4.4 Edit, disable, and delete
 
 - Edit changes the source or detection settings.
 - Disable preserves configuration and history but stops processing.
 - Delete removes the camera configuration; historical events remain in Event Center until separately deleted.
 - Record a change ticket before editing production camera URLs, thresholds, or sampling policy.
 
-### 4.4 Camera placement
+An upstream source URL is read-only, and its enabled state follows go2rtc synchronization. To rename or permanently remove it, change the customer go2rtc configuration and wait for the next sync; do not repeatedly override it in smokefire.
+
+### 4.5 Camera placement
 
 Keep the target area unobstructed and avoid severe backlight, glare, and rapid camera shake. The relevant target must occupy enough pixels: a high-resolution stream does not help if a person, cigarette, flame, or smoke plume is still very small in the scene.
 
-### 4.5 Capacity notices
+### 4.6 Capacity notices
 
 When the interface reports insufficient capacity, do not simply add more cameras. Reduce stream resolution/bitrate or detection rate only after a representative replay test, or move the workload to a more capable host.
 
@@ -287,6 +298,10 @@ Refresh once, then check whether the browser supports the stream and whether the
 
 Confirm the camera/NVR is powered and reachable. An administrator should test the same RTSP URL on the service host and check credentials, port 554, and codec.
 
+### Existing go2rtc has many feeds, but none appear automatically
+
+Confirm that existing-go2rtc mode is enabled and that the smokefire container can reach go2rtc API port `1984` and RTSP port `8554`. On the same host, the container normally uses `host.docker.internal`, not `127.0.0.1`. Automatic sync imports main streams and deduplicates matching substreams; users should not enter every feed manually.
+
 ### The camera remains in Recording warm-up
 
 Wait for the first closed segment. If the state persists, check stream stability and FFmpeg logs.
@@ -334,4 +349,3 @@ Per-camera settings saved in Camera Management normally apply live. Global `.env
 
 **Prepared by: Shenzhen Dudumiao Technology Co., Ltd.**  
 **Project: https://github.com/newtv-ai/smokefire**
-

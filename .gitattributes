@@ -1,0 +1,12 @@
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.example text eol=lf
+*.ps1 text eol=crlf
+*.pdf binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.pt binary
+*.zip binary
