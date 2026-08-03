@@ -1,0 +1,6 @@
+.env
+*.zip
+*.tar
+*.tar.gz
+models/*.pt
+
