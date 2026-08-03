@@ -19,7 +19,7 @@
 | Default threshold | `0.30` for every image in this guide |
 | Input size | 640 |
 | Test sample | 18 D-Fire images plus 12 CigDet images; 30 total |
-| Runtime | NVIDIA GeForce RTX 4080 Laptop GPU, PyTorch 2.9.1+cu128, Ultralytics 8.4.24 |
+| Runtime | NVIDIA CUDA validation environment with PyTorch 2.9.1+cu128 and Ultralytics 8.4.24; the validation-host model does not define customer GPU compatibility |
 | Project | `https://github.com/newtv-ai/smokefire` |
 
 ## Contents

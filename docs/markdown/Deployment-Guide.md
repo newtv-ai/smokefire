@@ -64,7 +64,7 @@ Each delivery includes prebuilt smokefire and go2rtc Docker images, `fire_smoke_
 | Free disk | 20 GB plus event data | 50 GB plus event data |
 | Cameras | RTSP; H.264 recommended | Same |
 
-The CPU build suits pilots and smaller sites. The GPU build suits higher concurrency, but actual capacity still depends on codec, resolution, sampling interval, recording, network conditions, and the target hardware. Validate the planned stream count with real feeds.
+The CPU build suits pilots and smaller sites. GPU compatibility and capacity are not promised by reference to any single validation-host model. First confirm that the target driver can run the bundled CUDA 12.8 runtime, then validate startup, both model loads, VRAM use, sustained operation, and the planned stream count with real feeds. Actual capacity depends on the GPU, driver, codec, resolution, sampling interval, recording, and network conditions.
 
 ---
 

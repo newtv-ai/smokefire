@@ -14,7 +14,7 @@ Prepared by: Shenzhen Dudumiao Technology Co., Ltd. / 深圳市嘟嘟喵科技�
 ## Validation performed
 
 - CPU offline image export includes both `smokefire:1.0.0-cpu` and `alexxit/go2rtc:1.9.9`.
-- NVIDIA GPU image reports PyTorch 2.9.1+cu128, CUDA available, and loads and warms both delivered weights on an RTX 4080 Laptop GPU.
+- NVIDIA GPU image reports PyTorch 2.9.1+cu128 and CUDA available, and loads and warms both delivered weights on the validation host. The validation-host model does not define customer GPU compatibility; every target host requires its own driver, startup, VRAM, and sustained-run checks.
 - GPU service reaches HTTP 200 readiness after both model capabilities complete warm-up.
 - Existing-go2rtc end-to-end test imports main streams, filters a `_sub` stream, disables a missing upstream stream, and restores it automatically when it reappears.
 - All six PDFs pass text checks, A4 rendering, and visual page inspection.
