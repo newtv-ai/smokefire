@@ -70,7 +70,7 @@ The CPU build suits pilots and smaller sites. GPU compatibility and capacity are
 
 ## 2. Download and verification
 
-The repository is currently Private. Authorized delivery users must sign in to GitHub and open Release `v1.0.0` at:
+The repository is currently Public. Users can open Release `v1.0.0` and download the delivery assets without signing in to GitHub:
 
 ```text
 https://github.com/newtv-ai/smokefire
@@ -376,7 +376,7 @@ Before upgrading, verify that the backup is readable. Download and verify the ne
 - [ ] Start, stop, restart, and host reboot recovery were tested.
 - [ ] `/api/health/live` and `/api/health/ready` return normally.
 - [ ] Install directory, data volume, backup location, and version 1.0.0 are recorded.
-- [ ] The repository remains Private and delivery users have authorized access.
+- [ ] The repository remains Public and users can open the Release page and download delivery assets anonymously.
 
 ### Video and business acceptance
 
