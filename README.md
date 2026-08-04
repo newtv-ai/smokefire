@@ -2,7 +2,7 @@
 
 **不用更换摄像头或 NVR。支持 RTSP、用户现有 go2rtc 批量接入，视频在本地处理，无需上传云端。**
 
-[下载 v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0) · [查看部署手册](docs/smokefire-部署手册.pdf) · [查看模型实测](docs/smokefire-模型能力实测手册.pdf) · [提交部署/试点咨询](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)
+[观看演示视频](demo/README.md) · [下载 v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0) · [查看部署手册](docs/smokefire-部署手册.pdf) · [查看模型实测](docs/smokefire-模型能力实测手册.pdf) · [提交部署/试点咨询](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)
 
 深圳市嘟嘟喵科技有限公司 · 版本 1.0.0 · [English](README.en.md)
 
@@ -24,23 +24,32 @@ smokefire 给已有视频监控增加三类 AI 辅助告警能力：
 | CPU / NVIDIA GPU | 提供两套离线 Docker 交付，目标机不需要 Python 或编译环境 |
 | 可核验的模型边界 | 公布固定样本、实际检测框、置信度和漏检/误检现象 |
 
-## 先看实际检测效果
+## 演示视频
+
+以下 MP4 是已经带检测框的原始演示视频，复制进仓库时没有重新推理、转码或剪辑：
+
+- [电动车起火检测演示（约 1 分 33 秒）](demo/videos/ebike_fire.mp4)
+- [吸烟检测演示（约 45 秒）](demo/videos/吸烟检测.mp4)
+
+视频与全部演示图片集中保存在 [`demo/`](demo/README.md)。
+
+## 公开图片实测
 
 下图来自网上下载的真实公开数据集，可能与现场实际有所出入。检测框由 `fire_smoke_v5.pt` / `smoking_v4.pt` 在默认阈值 `0.30` 下实际推理生成；图片未人工补框，置信度保留两位小数展示。
 
 | 明火样本（5 张） | 烟雾样本（5 张） |
 |---|---|
-| ![明火检测实测](docs/markdown/assets/model-tests/public/panels/dfire-fire.jpg) | ![烟雾检测实测](docs/markdown/assets/model-tests/public/panels/dfire-smoke.jpg) |
+| ![明火检测实测](demo/images/dfire-fire.jpg) | ![烟雾检测实测](demo/images/dfire-smoke.jpg) |
 
 | 烟火同框（4 张） | 无烟火干扰样本（4 张） |
 |---|---|
-| ![烟火同框实测](docs/markdown/assets/model-tests/public/panels/dfire-fire-smoke.jpg) | ![无烟火干扰样本](docs/markdown/assets/model-tests/public/panels/dfire-negative.jpg) |
+| ![烟火同框实测](demo/images/dfire-fire-smoke.jpg) | ![无烟火干扰样本](demo/images/dfire-negative.jpg) |
 
 抽烟检测共展示 12 张公开数据集图片：
 
 | C01-C04 | C05-C08 | C09-C12 |
 |---|---|---|
-| ![抽烟检测 C01-C04](docs/markdown/assets/model-tests/public/panels/cigdet-01-04.jpg) | ![抽烟检测 C05-C08](docs/markdown/assets/model-tests/public/panels/cigdet-05-08.jpg) | ![抽烟检测 C09-C12](docs/markdown/assets/model-tests/public/panels/cigdet-09-12.jpg) |
+| ![抽烟检测 C01-C04](demo/images/cigdet-01-04.jpg) | ![抽烟检测 C05-C08](demo/images/cigdet-05-08.jpg) | ![抽烟检测 C09-C12](demo/images/cigdet-09-12.jpg) |
 
 以上只是固定公开样本的实测结果，不是总体准确率承诺。完整样本编号、结果表和能力边界见[模型能力实测手册](docs/smokefire-模型能力实测手册.pdf)。
 
