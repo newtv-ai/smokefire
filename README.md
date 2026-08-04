@@ -1,41 +1,95 @@
-# smokefire 1.0.0 部署交付
+# 利用现有监控，离线识别烟雾、明火和违规吸烟
 
-深圳市嘟嘟喵科技有限公司提供的烟火 / 抽烟视频 AI 辅助告警系统部署仓库。
+**不用更换摄像头或 NVR。支持 RTSP、用户现有 go2rtc 批量接入，视频在本地处理，无需上传云端。**
 
-本仓库面向最终用户部署与使用，仓库保持 **PRIVATE**，不包含项目源码树。Release `v1.0.0` 提供已经构建好的 CPU、NVIDIA GPU 离线运行包、两套模型权重、启动与校验脚本，以及中英文手册。
+[下载 v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0) · [查看部署手册](docs/smokefire-部署手册.pdf) · [查看模型实测](docs/smokefire-模型能力实测手册.pdf) · [提交部署/试点咨询](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)
 
-## 发布文件
+深圳市嘟嘟喵科技有限公司 · 版本 1.0.0 · [English](README.en.md)
 
-- `smokefire-deploy-1.0.0-cpu.zip`：完整 CPU 离线部署包，已包含 smokefire、go2rtc 镜像和两套权重；
-- `smokefire-deploy-1.0.0-gpu.zip`：NVIDIA GPU 部署包，已包含两套权重、脚本、配置和手册；
-- `smokefire-images.tar.gz.partNN`：GPU 离线镜像的全部分卷，使用 GPU 包时必须全部下载；
-- `fire_smoke_v5.pt`、`smoking_v4.pt`：单独提供的模型权重备份；
-- `SHA256SUMS-v1.0.0.txt`：全部 Release 文件的 SHA-256。
+## 它解决什么问题
 
-## 快速开始
+smokefire 给已有视频监控增加三类 AI 辅助告警能力：
 
-CPU：下载并解压 `smokefire-deploy-1.0.0-cpu.zip`，Windows 运行 `start.ps1`，Linux 运行 `start.sh`。
+- 烟雾检测；
+- 明火检测；
+- 违规吸烟检测。
 
-GPU：下载并解压 `smokefire-deploy-1.0.0-gpu.zip`，再把 Release 中全部 `smokefire-images.tar.gz.partNN` 放入解压目录的 `images/`，然后运行启动脚本。GPU 主机需预先安装 NVIDIA 驱动、Docker 和 NVIDIA Container Toolkit。
+它适合服装、鞋材、家具、包装、印刷、仓库、物流中转、电子装配、五金加工等已有监控的场所，也可以作为安防工程商、弱电工程商和消防技术服务机构的辅助巡查方案。
 
-服务启动后，在服务主机打开 `http://127.0.0.1:8600`。
+| 核心特点 | 说明 |
+|---|---|
+| 利用现有设备 | 直接接入摄像机或 NVR 的 RTSP，不要求更换前端设备 |
+| 本地离线运行 | 推理、事件和录像保存在部署主机，运行时不依赖云端 AI |
+| go2rtc 批量对接 | 用户已有 go2rtc 时，只配置一次 API/RTSP 基址，自动同步全部主码流 |
+| CPU / NVIDIA GPU | 提供两套离线 Docker 交付，目标机不需要 Python 或编译环境 |
+| 可核验的模型边界 | 公布固定样本、实际检测框、置信度和漏检/误检现象 |
 
-## 视频流接入
+## 先看实际检测效果
 
-交付包支持三种模式：
+下图来自网上下载的真实公开数据集，可能与现场实际有所出入。检测框由 `fire_smoke_v5.pt` / `smoking_v4.pt` 在默认阈值 `0.30` 下实际推理生成；图片未人工补框，置信度保留两位小数展示。
 
-1. 直接填写摄像机 / NVR 的 RTSP 地址；
-2. 使用交付包自带 go2rtc 做复用；
-3. 对接用户已有 go2rtc：只配置一次 API 基址和 RTSP 基址，smokefire 会读取 `GET /api/streams`，批量同步全部主码流，不需要逐路手工添加。
+| 明火样本（5 张） | 烟雾样本（5 张） |
+|---|---|
+| ![明火检测实测](docs/markdown/assets/model-tests/public/panels/dfire-fire.jpg) | ![烟雾检测实测](docs/markdown/assets/model-tests/public/panels/dfire-smoke.jpg) |
 
-同一主机上的既有 go2rtc，从容器内通常使用：
+| 烟火同框（4 张） | 无烟火干扰样本（4 张） |
+|---|---|
+| ![烟火同框实测](docs/markdown/assets/model-tests/public/panels/dfire-fire-smoke.jpg) | ![无烟火干扰样本](docs/markdown/assets/model-tests/public/panels/dfire-negative.jpg) |
+
+抽烟检测共展示 12 张公开数据集图片：
+
+| C01-C04 | C05-C08 | C09-C12 |
+|---|---|---|
+| ![抽烟检测 C01-C04](docs/markdown/assets/model-tests/public/panels/cigdet-01-04.jpg) | ![抽烟检测 C05-C08](docs/markdown/assets/model-tests/public/panels/cigdet-05-08.jpg) | ![抽烟检测 C09-C12](docs/markdown/assets/model-tests/public/panels/cigdet-09-12.jpg) |
+
+以上只是固定公开样本的实测结果，不是总体准确率承诺。完整样本编号、结果表和能力边界见[模型能力实测手册](docs/smokefire-模型能力实测手册.pdf)。
+
+## 对接现有 go2rtc
+
+如果用户已经用 go2rtc 管理摄像头，不需要在 smokefire 中逐路重新填写：
+
+```text
+用户 go2rtc: GET /api/streams
+        ↓ 自动发现主码流、过滤 _sub / -sub / _sd
+smokefire 摄像头列表
+        ↓
+AI 检测、事件截图、录像与 webhook
+```
+
+只需配置一次：
 
 ```text
 API  http://host.docker.internal:1984
 RTSP rtsp://host.docker.internal:8554
 ```
 
-完整命令、子码流过滤、流删除与恢复规则见部署手册。
+系统只读取用户 go2rtc 的流列表，不修改其配置。上游流消失时，对应摄像头会停用；流恢复后自动重新启用。
+
+## 选择 CPU 还是 GPU
+
+| 版本 | 适合场景 | 下载内容 |
+|---|---|---|
+| CPU | 功能体验、试点、小规模接入、没有 NVIDIA GPU 的主机 | 一个完整 ZIP |
+| NVIDIA GPU | 更高并发需求 | GPU ZIP + 全部 3 个镜像分卷 |
+
+不按某个测试显卡型号承诺兼容性或支持路数。GPU 目标机需要 NVIDIA 驱动、Docker 和 NVIDIA Container Toolkit，并必须使用真实码流完成驱动、显存、持续运行和容量验收。
+
+## 下载与部署
+
+公开仓库不包含项目源码树；Release 提供可运行的无源码部署交付、两套模型权重、Docker 镜像、启动/校验脚本和中英文手册。
+
+1. 打开 [Release v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0)。
+2. CPU 用户下载 `smokefire-deploy-1.0.0-cpu.zip`；GPU 用户同时下载 GPU ZIP 和全部镜像分卷。
+3. 先运行 `verify.ps1` 或 `verify.sh` 校验文件，再运行 `start.ps1` 或 `start.sh`。
+4. 在服务主机打开 `http://127.0.0.1:8600`。
+
+详细步骤见[部署手册](docs/smokefire-部署手册.pdf)。
+
+## 首批试点建议
+
+建议先选择 2-4 路有代表性的现有摄像头，连续观察 14 天，覆盖白天、夜间、逆光、遮挡、远近目标和常见干扰物，再根据误报、漏报、录像证据与资源占用决定是否扩大范围。这是建议的验证流程，不代表现场容量或商业服务承诺。
+
+需要部署或试点沟通时，请[新建 Issue](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)，说明所在城市、行业、计划接入路数、现有视频接入方式以及 CPU/GPU 环境。当前没有公开客户案例；真实试点完成并获得客户许可后再补充。
 
 ## 文档
 
@@ -46,6 +100,4 @@ RTSP rtsp://host.docker.internal:8554
 - [User Operation Manual](docs/smokefire-User-Operation-Manual.pdf)
 - [Model Capability Test Guide](docs/smokefire-Model-Capability-Test-Guide.pdf)
 
-模型实测手册统一使用默认置信度阈值 `0.30`，检测框由 `fire_smoke_v5.pt` / `smoking_v4.pt` 实际推理生成，没有人工补框。系统是 AI 辅助告警工具，不能替代法定消防设施、人工巡检、应急流程和现场复核。
-
-英文说明见 [README.en.md](README.en.md)。
+> smokefire 是视频 AI 辅助告警工具，不是经认证的火灾报警设备，不能替代法定消防设施、人工巡检、应急流程和现场复核。模型可能误报或漏报。
