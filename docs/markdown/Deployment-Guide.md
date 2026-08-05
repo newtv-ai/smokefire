@@ -230,6 +230,10 @@ That is the whole command. Verifying the delivery files is the start script's fi
 
 `-ExecutionPolicy Bypass` applies to that single invocation and does not change the system execution policy.
 
+The script records everything to **`start-log.txt`** in the deployment directory. If anything goes wrong, sending that single file is enough for support: no screenshots, no recalling what scrolled past.
+
+The script ends on a "Press Enter to close this window" prompt, so the window survives even when the script is double-clicked. Pass `-NoPause` to skip that prompt in automated use.
+
 Every failing step prints its cause and stops, so the script never continues with a half-built environment. If it stops, read the last `[N/5]` line in the terminal and match it against 3.5.
 
 ### 3.4 Linux installation
@@ -520,8 +524,8 @@ Before upgrading, verify that the backup is readable. Download and verify the ne
 | Symptom | First check | Action |
 |---|---|---|
 | Docker command unavailable | Docker Desktop/Engine | Start the engine and retry `docker version` |
-| Start script exits early, window flashes and closes | Whether the script was double-clicked | Run it from an already open PowerShell window, see 3.3, so the error stays visible |
-| Unclear which step failed | The last `[N/5]` line in the terminal | Match it against 3.5 stage by stage |
+| Start script exits before finishing | `start-log.txt` in the deployment directory | It records the whole run; send that file to support |
+| Unclear which step failed | The last `[N/5]` line, or `start-log.txt` | Match it against 3.5 stage by stage |
 | GPU container unavailable | Driver, Container Toolkit, Docker GPU support | Pass `nvidia-smi` and container CUDA checks first |
 | GPU image part missing | `images/`, filenames, SHA-256 | Download all parts without renaming them |
 | Readiness remains false | Logs, models, disk, upstream sync | Run `docker compose logs --tail 300 smokefire` |
