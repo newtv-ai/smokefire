@@ -10,6 +10,17 @@ function Get-EnvValue {
     return ($line -split "=", 2)[1].Trim()
 }
 
+function Test-DockerImage {
+    param([Parameter(Mandatory = $true)][string]$Reference)
+    # "docker images --quiet" prints nothing and exits 0 when the image is absent,
+    # so it never writes to stderr. Do not go back to
+    # "docker image inspect <ref> *> $null": Windows PowerShell turns redirected
+    # native stderr into a terminating NativeCommandError while
+    # $ErrorActionPreference is Stop, which aborted this script on every clean host.
+    $imageId = docker images --quiet $Reference | Select-Object -First 1
+    return -not [string]::IsNullOrWhiteSpace($imageId)
+}
+
 function Import-OfflineImages {
     $archive = Join-Path $PSScriptRoot "images\smokefire-images.tar.gz"
     $temporaryArchive = $null
@@ -29,8 +40,8 @@ function Import-OfflineImages {
         try {
             foreach ($part in $parts) {
                 Write-Host "Assembling $($part.Name)..."
-                $input = [System.IO.File]::OpenRead($part.FullName)
-                try { $input.CopyTo($output) } finally { $input.Dispose() }
+                $partStream = [System.IO.File]::OpenRead($part.FullName)
+                try { $partStream.CopyTo($output) } finally { $partStream.Dispose() }
             }
         } finally {
             $output.Dispose()
@@ -53,7 +64,13 @@ Write-Host "[1/5] Verifying deployment files..."
 
 Write-Host "[2/5] Checking Docker..."
 docker info | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Docker is not reachable. Start Docker Desktop (or the docker service), wait until it reports Running, then run this script again."
+}
 docker compose version | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Docker Compose v2 is not available. Install Compose v2, then run this script again."
+}
 
 if (-not (Test-Path -LiteralPath ".env")) {
     Copy-Item -LiteralPath ".env.example" -Destination ".env"
@@ -67,10 +84,8 @@ if (-not $servicePort) { $servicePort = "8600" }
 $go2rtcImage = "alexxit/go2rtc:1.9.9"
 
 Write-Host "[3/5] Importing the prebuilt smokefire and go2rtc images when needed..."
-docker image inspect $appImage *> $null
-$appMissing = $LASTEXITCODE -ne 0
-docker image inspect $go2rtcImage *> $null
-$go2rtcMissing = $LASTEXITCODE -ne 0
+$appMissing = -not (Test-DockerImage -Reference $appImage)
+$go2rtcMissing = -not (Test-DockerImage -Reference $go2rtcImage)
 if ($appMissing -or $go2rtcMissing) {
     Import-OfflineImages
 } else {

@@ -52,7 +52,10 @@ switch ($Mode) {
     }
 }
 
-$running = docker compose -p smokefire ps --status running -q smokefire 2>$null
+# No "2>$null" here: Windows PowerShell turns redirected native stderr into a
+# terminating NativeCommandError while $ErrorActionPreference is Stop. The command
+# stays silent and exits 0 when the project is not running, so no redirect is needed.
+$running = docker compose -p smokefire ps --status running --quiet smokefire
 if ($LASTEXITCODE -eq 0 -and $running) {
     docker compose -p smokefire up -d --force-recreate smokefire
     if ($LASTEXITCODE -ne 0) { throw "Failed to recreate smokefire." }
