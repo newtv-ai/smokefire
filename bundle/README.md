@@ -10,7 +10,6 @@
 Windows：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\verify.ps1
 powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
@@ -18,9 +17,10 @@ Linux：
 
 ```bash
 chmod +x verify.sh start.sh stop.sh configure-go2rtc.sh
-./verify.sh
 ./start.sh
 ```
+
+启动脚本第一步会自动校验交付文件，不需要另外运行 `verify`。校验失败会直接停下并指出是哪个文件。
 
 启动成功后，在服务主机打开 `http://127.0.0.1:8600`。
 

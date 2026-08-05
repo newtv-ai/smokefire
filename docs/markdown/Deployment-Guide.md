@@ -136,36 +136,26 @@ The start script assembles the parts in filename order, loads the Docker images,
 
 ### 2.3 Verify files
 
-Run the verification inside the extracted deployment directory. It confirms that the download is complete and untampered.
+**There is no separate verification step.** The start script verifies the delivery files as its first stage and stops with the offending filename if anything fails, so a normal deployment is a single command; see section 3.
 
-Windows, from an already open PowerShell window:
-
-```powershell
-cd D:\smokefire
-powershell -ExecutionPolicy Bypass -File .\verify.ps1
-```
-
-Expected output is one line per file plus a summary:
+The automatic verification prints one summary line:
 
 ```text
-OK  .env.example
-OK  configure-go2rtc.ps1
-OK  docker-compose.yml
-...
 Verified 25 files.
 ```
 
 The CPU bundle verifies 22 files and the GPU bundle 25, the difference being the three image parts. A lower count means a file is not in place.
 
-Linux:
+Run the verification by hand only when you want to confirm a download without starting the service yet:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\verify.ps1
+```
 
 ```bash
-cd /opt/smokefire
 chmod +x verify.sh start.sh stop.sh configure-go2rtc.sh
 ./verify.sh
 ```
-
-On Linux the output comes from `sha256sum -c`, one `<file>: OK` line per file.
 
 Fixed model checksums:
 
@@ -182,15 +172,14 @@ Do not continue after any checksum failure. Download the affected file again. An
 
 ### 3.1 Installation overview
 
-CPU or GPU, Windows or Linux, the main line is the same: install Docker, verify the files, run the start script once. The start script then runs five internal stages and prints `[N/5]` for each one.
+CPU or GPU, Windows or Linux, the main line is the same: install Docker, then run the start script once. Verification, image import, container startup and the readiness wait all happen inside that one script, which runs five internal stages and prints `[N/5]` for each one.
 
 | Step | Action | Command | Expected time |
 |---:|---|---|---|
 | 1 | Install and start Docker | See 3.2 / 3.4 | 10-30 min including download |
-| 2 | Verify delivery files | `verify.ps1` / `verify.sh` | ~1 min CPU, ~3 min GPU |
-| 3 | Run the start script | `start.ps1` / `start.sh` | ~5 min CPU, ~15 min GPU |
-| 4 | Open the web page | Browse to `http://127.0.0.1:8600` | 1 min |
-| 5 | Choose a video mode | `configure-go2rtc.*`, see section 4 | 5 min and up |
+| 2 | Run the start script (it verifies first) | `start.ps1` / `start.sh` | ~5 min CPU, ~15 min GPU |
+| 3 | Open the web page | Browse to `http://127.0.0.1:8600` | 1 min |
+| 4 | Choose a video mode | `configure-go2rtc.*`, see section 4 | 5 min and up |
 
 Most of the first-run time is spent importing the offline Docker images, which is expected. Image footprint after import:
 
@@ -234,9 +223,10 @@ Run the commands below **from an already open PowerShell window**. Do not double
 
 ```powershell
 cd D:\smokefire
-powershell -ExecutionPolicy Bypass -File .\verify.ps1
 powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
+
+That is the whole command. Verifying the delivery files is the start script's first stage, so `verify.ps1` does not need a separate run.
 
 `-ExecutionPolicy Bypass` applies to that single invocation and does not change the system execution policy.
 
@@ -257,9 +247,10 @@ Install:
 ```bash
 cd /opt/smokefire
 chmod +x verify.sh start.sh stop.sh configure-go2rtc.sh
-./verify.sh
 ./start.sh
 ```
+
+Keep `verify.sh` in the `chmod` list: the start script calls it, even though you never run it yourself.
 
 Prefix the docker commands with `sudo` when the current user is not in the `docker` group. The stage output matches 3.5.
 
@@ -271,13 +262,10 @@ Prefix the docker commands with `sudo` when the current user is not in the `dock
 
 ```text
 [1/5] Verifying deployment files...
-OK  .env.example
-OK  configure-go2rtc.ps1
-...
 Verified 25 files.
 ```
 
-The script calls `verify.ps1` / `verify.sh` for you. Stopping here means a file is missing or its checksum does not match; re-download it as described in 2.3.
+The script verifies for you, so nothing has to be run beforehand. The CPU bundle reports 22 files and the GPU bundle 25. Stopping here means a file is missing or its checksum does not match; the script names the file, and 2.3 explains how to re-download it.
 
 **[2/5] Check Docker**
 

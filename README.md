@@ -89,7 +89,7 @@ RTSP rtsp://host.docker.internal:8554
 
 1. 打开 [Release v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0)。
 2. CPU 用户下载 `smokefire-deploy-1.0.0-cpu.zip`；GPU 用户同时下载 GPU ZIP 和全部镜像分卷。
-3. 先运行 `verify.ps1` 或 `verify.sh` 校验文件，再运行 `start.ps1` 或 `start.sh`。
+3. 运行 `start.ps1` 或 `start.sh`，脚本第一步会自动校验交付文件。
 4. 在服务主机打开 `http://127.0.0.1:8600`。
 
 详细步骤见[部署手册](docs/smokefire-部署手册.pdf)。

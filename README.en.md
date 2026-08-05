@@ -88,7 +88,7 @@ This public repository does not contain the project source tree. Release assets 
 
 1. Open [Release v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0).
 2. CPU users download `smokefire-deploy-1.0.0-cpu.zip`; GPU users also download the GPU ZIP and every image part.
-3. Run `verify.ps1` or `verify.sh`, then `start.ps1` or `start.sh`.
+3. Run `start.ps1` or `start.sh`. Its first stage verifies the delivery files for you.
 4. Open `http://127.0.0.1:8600` on the service host.
 
 See the [Deployment Guide](docs/smokefire-Deployment-Guide.pdf) for the complete procedure.

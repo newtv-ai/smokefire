@@ -21,7 +21,6 @@ Get-Content -LiteralPath "SHA256SUMS" -Encoding UTF8 | ForEach-Object {
         throw "SHA-256 mismatch: $relative"
     }
     $checked++
-    Write-Host "OK  $relative"
 }
 
 if ($checked -eq 0) { throw "SHA256SUMS did not contain any files." }

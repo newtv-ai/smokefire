@@ -4,7 +4,11 @@ cd "$(dirname "$0")"
 
 env_value() {
   key="$1"
-  value=$(grep -E "^${key}=" .env | tail -n 1 | cut -d= -f2- || true)
+  # 必须去掉行尾的 CR：.env 可能是在 Windows 上生成或编辑过的。带 CR 时取出的值会污染
+  # 后续所有用法——镜像名会让 docker 报 invalid reference format（于是每次启动都以为
+  # 镜像缺失、白白重导一遍），端口号会让就绪探测的 URL 变成坏地址（于是明明服务已经起来，
+  # 脚本还是等满 5 分钟再报失败）。
+  value=$(grep -E "^${key}=" .env | tail -n 1 | cut -d= -f2- | tr -d '\r' || true)
   printf '%s' "$value"
 }
 
