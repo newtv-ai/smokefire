@@ -85,12 +85,21 @@ RTSP rtsp://host.docker.internal:8554
 
 ## 下载与部署
 
-公开仓库不包含项目源码树；Release 提供可运行的无源码部署交付、两套模型权重、Docker 镜像、启动/校验脚本和中英文手册。
+Release 提供两条部署路线，按目标机情况二选一。两条路功能完全一致。
+
+**A. Docker 离线包** —— 目标机不需要 Python，也不需要联网装依赖。
 
 1. 打开 [Release v1.0.0](https://github.com/newtv-ai/smokefire/releases/tag/v1.0.0)。
 2. CPU 用户下载 `smokefire-deploy-1.0.0-cpu.zip`；GPU 用户同时下载 GPU ZIP 和全部镜像分卷。
-3. 运行 `start.ps1` 或 `start.sh`，脚本第一步会自动校验交付文件。
+3. 解压后运行 `start.ps1` 或 `start.sh`，脚本第一步会自动校验交付文件。
 4. 在服务主机打开 `http://127.0.0.1:8600`。
+
+**B. 源码包** —— 不想在目标机装 Docker 时用，约 90 MB。
+
+1. 下载 `smokefire-source-1.0.0.zip` 并解压。
+2. 目标机需自备 Python 3.12 与 ffmpeg（Linux 还要 libgl1）；首次装依赖需要联网。
+3. 解压后运行一条命令：`start.ps1`（Windows）或 `./start.sh`（Linux），加 `-Gpu` / `--gpu` 走 GPU。
+4. 首次会自动建 venv 并装依赖，之后同一条命令就是日常启动命令。
 
 详细步骤见[部署手册](docs/smokefire-部署手册.pdf)。
 

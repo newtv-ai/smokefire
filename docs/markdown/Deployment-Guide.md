@@ -16,7 +16,7 @@
 | Item | Value |
 |---|---|
 | Audience | Deployment engineers, administrators, and site operators |
-| Delivery | Source-free offline Docker bundles for CPU and NVIDIA GPU |
+| Delivery | Either an offline Docker bundle (CPU / NVIDIA GPU) or a source bundle that needs no Docker |
 | Hosts | Windows 10/11, Windows Server, mainstream x86_64 Linux |
 | Video input | Direct RTSP, bundled go2rtc, or bulk sync from an existing go2rtc |
 | Default URL | `http://127.0.0.1:8600` |
@@ -26,16 +26,17 @@
 
 1. Delivery and requirements
 2. Download and verification
-3. CPU/GPU installation
-4. Video integration modes
-5. Existing go2rtc integration
-6. Bundled go2rtc and direct RTSP
-7. First start and acceptance
-8. Configuration and LAN access
-9. Routine operation
-10. Backup, restore, and upgrade
-11. Troubleshooting
-12. Handover checklist
+3. CPU/GPU installation (Docker)
+4. Source deployment (no Docker)
+5. Video integration modes
+6. Existing go2rtc integration
+7. Bundled go2rtc and direct RTSP
+8. First start and acceptance
+9. Configuration and LAN access
+10. Routine operation
+11. Backup, restore, and upgrade
+12. Troubleshooting
+13. Handover checklist
 
 ---
 
@@ -43,14 +44,24 @@
 
 ### 1.1 Release assets
 
-GitHub Release `v1.0.0` provides two source-free offline deliveries:
+GitHub Release `v1.0.0` offers two deployment routes. Pick the one that fits the target host.
+
+**A. Offline Docker bundle** (no Python on the host, no dependency download):
 
 - `smokefire-deploy-1.0.0-cpu.zip`: complete CPU bundle;
 - `smokefire-deploy-1.0.0-gpu.zip`: GPU configuration, models, scripts, and manuals;
 - `smokefire-images.tar.gz.partNN`: all GPU image parts, required with the GPU bundle;
 - `SHA256SUMS-v1.0.0.txt`: checksums for Release assets.
 
-Each delivery includes prebuilt smokefire and go2rtc Docker images, `fire_smoke_v5.pt`, `smoking_v4.pt`, Compose files, Windows/Linux scripts, and all six Chinese/English PDFs. The target host does not need Python, Git, compilers, or GitHub access after installation.
+Each bundle includes prebuilt smokefire and go2rtc Docker images, both model weights, Compose files, Windows/Linux scripts, and all six Chinese/English PDFs. Nothing is fetched from GitHub after installation. See section 3.
+
+**B. Source bundle** (for hosts that should not run Docker):
+
+- `smokefire-source-1.0.0.zip`: about 90 MB, containing the application source, front end, both model weights, install and start scripts, and the manuals.
+
+The source bundle is far smaller, but the host must provide Python 3.12 and ffmpeg, and the **first dependency install needs internet access** (about 1 GB for CPU, 3 GB for GPU). See section 4.
+
+Both routes deliver the same features; only the dependency isolation differs. The single functional difference is described in 4.6.
 
 ### 1.2 Host requirements
 
@@ -168,7 +179,7 @@ Do not continue after any checksum failure. Download the affected file again. An
 
 ---
 
-## 3. CPU/GPU installation
+## 3. CPU/GPU installation (Docker)
 
 ### 3.1 Installation overview
 
@@ -179,7 +190,7 @@ CPU or GPU, Windows or Linux, the main line is the same: install Docker, then ru
 | 1 | Install and start Docker | See 3.2 / 3.4 | 10-30 min including download |
 | 2 | Run the start script (it verifies first) | `start.ps1` / `start.sh` | ~5 min CPU, ~15 min GPU |
 | 3 | Open the web page | Browse to `http://127.0.0.1:8600` | 1 min |
-| 4 | Choose a video mode | `configure-go2rtc.*`, see section 4 | 5 min and up |
+| 4 | Choose a video mode | `configure-go2rtc.*`, see section 5 | 5 min and up |
 
 Most of the first-run time is spent importing the offline Docker images, which is expected. Image footprint after import:
 
@@ -338,7 +349,140 @@ Use `stop.ps1` on Windows or `./stop.sh` on Linux. Stopping preserves business d
 
 ---
 
-## 4. Video integration modes
+## 4. Source deployment (no Docker)
+
+Use this route when the target host should not run Docker. The features are identical to
+the Docker route; only the dependency isolation differs. Docker seals Python and the
+system libraries inside an image, while this route uses the host's own Python.
+
+| | Docker route | Source route |
+|---|---|---|
+| Target host needs | Docker + Compose v2 | Python 3.12, ffmpeg, plus libgl1 on Linux |
+| Internet needed on first run | No, images ship with the bundle | **Yes**, about 1 GB of dependencies (3 GB for GPU) |
+| Bundle size | ~913 MB CPU / ~90 MB GPU plus 4.8 GB of parts | **~90 MB** |
+| Upgrading | Swap the image | Extract a new directory and reinstall |
+
+### 4.1 Prerequisites
+
+The install script checks each item and stops with the command to fix it.
+
+| Dependency | Why | How to install |
+|---|---|---|
+| Python 3.12 | The lock files are generated for 3.12; other versions are rejected | Windows `winget install Python.Python.3.12`; Linux use the distribution package manager |
+| ffmpeg + ffprobe | Required for the H.264 evidence chain of event recordings; both are needed | Windows `winget install Gyan.FFmpeg`; Debian/Ubuntu `sudo apt-get install -y ffmpeg` |
+| libgl1, libglib2.0-0 | Required by OpenCV, **Linux only** | `sudo apt-get install -y libgl1 libglib2.0-0` |
+| Internet access | First dependency install only | ~1 GB CPU, ~3 GB GPU |
+| NVIDIA driver | **GPU only**, must support CUDA 12.8 | Vendor driver |
+
+### 4.2 Download and extract
+
+Download `smokefire-source-1.0.0.zip` (~90 MB) from the same Release and extract it into a
+path without spaces or non-ASCII characters.
+
+```text
+D:\smokefire-source  smokefire\              application source
+  web\                    front-end pages
+  models\                 both model weights
+  deploy\                 install and service-registration scripts
+  docs\                   Chinese and English manual PDFs
+  requirements-*.lock      four platform lock files, selected automatically
+  .env.example             configuration template
+  start.ps1  start.sh      one-command entry points
+  SHA256SUMS
+```
+
+### 4.3 One command
+
+Windows, from an already open PowerShell window:
+
+```powershell
+cd D:\smokefire-source
+powershell -ExecutionPolicy Bypass -File .\start.ps1          # CPU
+powershell -ExecutionPolicy Bypass -File .\start.ps1 -Gpu     # NVIDIA GPU
+```
+
+Linux:
+
+```bash
+cd /opt/smokefire-source
+chmod +x start.sh
+./start.sh                 # CPU
+./start.sh --gpu           # NVIDIA GPU
+```
+
+Add a pip mirror on a slow link:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1 -PipMirror https://mirrors.aliyun.com/pypi/simple/
+```
+
+```bash
+./start.sh --pip-mirror https://mirrors.aliyun.com/pypi/simple/
+```
+
+The **first run** creates `.venv`, installs the locked dependencies (measured at about
+1.1 GB for CPU, a good ten minutes depending on the link) and then starts the service.
+**Every later run** of the same command skips the install and starts straight away,
+with no internet needed.
+
+This line means it is up; open that address in a browser:
+
+```text
+"msg": "smokefire ready", "port": 8600
+```
+
+Press Ctrl+C to stop. Delete the `.venv` directory to force a clean reinstall.
+
+### 4.4 Where data and configuration live
+
+| Item | Location |
+|---|---|
+| Database and event recordings | `data/` inside the extracted directory |
+| Model weights | `models/` inside the extracted directory |
+| Configuration | `.env`, generated from `.env.example` on first start |
+| Startup log | `start-log.txt` in the extracted directory (Windows only) |
+
+Everything stays inside the extracted directory; nothing is written to system locations.
+To move the installation, copy the whole directory but leave `.venv` behind and rerun the
+one command on the new host so it is rebuilt there.
+
+To change the port or allow LAN access, edit `SMOKEFIRE_HOST`, `SMOKEFIRE_PORT` and
+`SMOKEFIRE_ALLOWED_HOSTS` in `.env` and restart. Their meaning is covered in section 9.
+
+### 4.5 Starting automatically
+
+A foreground service stops when the terminal closes. For unattended operation, register it:
+
+- Windows: `deploy\windows
+egister-service.ps1`, which needs administrator rights and NSSM (`winget install NSSM`)
+- Linux: adjust the paths in `deploy/linux/smokefire.service` as its comments describe, then `sudo systemctl enable --now smokefire`
+
+### 4.6 The one functional difference from the Docker route
+
+**Bundled go2rtc mode** requires you to supply a go2rtc executable yourself and run it at
+the address `SMOKEFIRE_GO2RTC_API` points to in `.env`. The Docker route ships a go2rtc
+container instead. The other two video modes, direct RTSP and an existing site go2rtc,
+behave exactly as sections 6 and 7 describe.
+
+### 4.7 When something fails
+
+`start.ps1` records the whole run to `start-log.txt`; send that one file to support. On
+Linux use:
+
+```bash
+./start.sh 2>&1 | tee start-log.txt
+```
+
+| Symptom | Cause | Action |
+|---|---|---|
+| Message that the lock files need Python 3.12 | A different version is installed | Install 3.12 and confirm with `python --version` |
+| ffmpeg/ffprobe not detected | Not installed, or not on PATH | Install per 4.1, then **open a new terminal** |
+| Dependency install fails partway | Usually the network | Retry with `-PipMirror` / `--pip-mirror` |
+| Linux reports a missing libGL | System library not installed | `sudo apt-get install -y libgl1 libglib2.0-0` |
+
+---
+
+## 5. Video integration modes
 
 Choose one mode for the site:
 
@@ -354,9 +498,9 @@ The provided configuration script changes only `.env` in the deployment director
 
 ---
 
-## 5. Existing go2rtc integration
+## 6. Existing go2rtc integration
 
-### 5.1 How the upstream project integrates
+### 6.1 How the upstream project integrates
 
 smokefire retains the upstream system's bulk synchronization approach:
 
@@ -375,7 +519,7 @@ AI detection, recording, preview, and events
 
 The synchronizer only reads `GET /api/streams`; it never calls create, update, or delete operations on the customer's go2rtc. The first sync registers all main streams automatically. When a matching main stream exists, names ending in `_sub`, `-sub`, or `_sd` are treated as substreams and skipped to prevent duplicates. At the default 300-second interval, new streams are added, missing streams are disabled, and returning streams are enabled again.
 
-### 5.2 Configure once
+### 6.2 Configure once
 
 If go2rtc runs on the same Docker host, do not use `127.0.0.1` from inside the smokefire container. Use `host.docker.internal`:
 
@@ -410,7 +554,7 @@ SMOKEFIRE_UPSTREAM_GO2RTC_RTSP=rtsp://192.168.10.20:8554
 SMOKEFIRE_UPSTREAM_GO2RTC_SYNC_INTERVAL_SEC=300
 ```
 
-### 5.3 Validate automatic import
+### 6.3 Validate automatic import
 
 1. Open `http://<go2rtc-host>:1984/api/streams` and confirm it returns the expected feeds.
 2. Run the configuration script and start smokefire.
@@ -423,9 +567,9 @@ Keep existing go2rtc stream names unique and stable. The synchronizer owns impor
 
 ---
 
-## 6. Bundled go2rtc and direct RTSP
+## 7. Bundled go2rtc and direct RTSP
 
-### 6.1 Bundled go2rtc
+### 7.1 Bundled go2rtc
 
 Use this when the site has no go2rtc but wants detection and recording to share one upstream camera producer:
 
@@ -439,7 +583,7 @@ Use this when the site has no go2rtc but wants detection and recording to share 
 
 Continue adding camera RTSP URLs in Camera Management. smokefire creates internal `sf-camN` aliases automatically, and both AI and recording consume the bundled go2rtc output.
 
-### 6.2 Direct RTSP
+### 7.2 Direct RTSP
 
 ```powershell
 .\configure-go2rtc.ps1 -Mode direct
@@ -453,7 +597,7 @@ Add camera or NVR RTSP URLs individually in Camera Management. This is the simpl
 
 ---
 
-## 7. First start and acceptance
+## 8. First start and acceptance
 
 Open `http://127.0.0.1:8600` on the service host. Initial model loading may take several minutes.
 
@@ -477,7 +621,7 @@ Installation success is not production acceptance. See the Model Capability Test
 
 ---
 
-## 8. Configuration and LAN access
+## 9. Configuration and LAN access
 
 The Web port binds to `127.0.0.1:8600` by default. For LAN access, an engineer must set the bind address and allowed hostnames in `.env`, then restart.
 
@@ -497,7 +641,7 @@ RTSP URLs may contain credentials. Restrict access to the deployment directory, 
 
 ---
 
-## 9. Routine operation
+## 10. Routine operation
 
 ```bash
 docker compose ps
@@ -509,7 +653,7 @@ Daily checks should cover camera status, latest successful upstream sync, previe
 
 ---
 
-## 10. Backup, restore, and upgrade
+## 11. Backup, restore, and upgrade
 
 Business data is stored in the `smokefire-data` named volume. Stop the service, record the version, and copy the entire `/app/data` tree. A complete backup includes camera records, the SQLite database, event videos, snapshots, false-positive feedback, and notification outbox. The customer's existing go2rtc configuration remains the customer's backup responsibility and is not stored in the smokefire volume.
 
@@ -519,7 +663,7 @@ Before upgrading, verify that the backup is readable. Download and verify the ne
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 | Symptom | First check | Action |
 |---|---|---|
@@ -538,7 +682,7 @@ Before upgrading, verify that the backup is readable. Download and verify the ne
 
 ---
 
-## 12. Handover checklist
+## 13. Handover checklist
 
 ### Installation
 
