@@ -1,5 +1,5 @@
-48bb213b341ba83bc89b5d4bad8335a5dcb2143750ea3ec6bb5b1abfaaa541ab  smokefire-deploy-1.0.0-cpu.zip
-05dd8770407b5428048200ebc8329ec7f179339989af0d7e10235b611cdc756c  smokefire-deploy-1.0.0-gpu.zip
+9a4c7aa52dfc2092de9f93d067f3d94f385520df3c440e728f1e6fecf350b0c8  smokefire-deploy-1.0.0-cpu.zip
+4835ce85b8b491c152ce84c9dfb68d144fdacada9255c3fc9d85dc551dffc87f  smokefire-deploy-1.0.0-gpu.zip
 fec05b456b05db5b5eb0cf728a0b0ed92cd1aed93525357907f5eb22746829cd  smokefire-images.tar.gz.part01
 3055dfa55f322815d5332f23593127efe41e01399c25ce18070c39ffd2638e50  smokefire-images.tar.gz.part02
 2ac47fe0310648e0cba259216c16445422bf97e55eda7e4023015b0681d42ca8  smokefire-images.tar.gz.part03
