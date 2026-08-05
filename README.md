@@ -98,7 +98,7 @@ RTSP rtsp://host.docker.internal:8554
 
 建议先选择 2-4 路有代表性的现有摄像头，连续观察 14 天，覆盖白天、夜间、逆光、遮挡、远近目标和常见干扰物，再根据误报、漏报、录像证据与资源占用决定是否扩大范围。这是建议的验证流程，不代表现场容量或商业服务承诺。
 
-需要部署或试点沟通时，请[新建 Issue](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)，说明所在城市、行业、计划接入路数、现有视频接入方式以及 CPU/GPU 环境。当前没有公开客户案例；真实试点完成并获得客户许可后再补充。
+需要部署或试点沟通时，请[新建 Issue](https://github.com/newtv-ai/smokefire/issues/new?title=%E9%83%A8%E7%BD%B2%2F%E8%AF%95%E7%82%B9%E5%92%A8%E8%AF%A2)，说明所在城市、行业、计划接入路数、现有视频接入方式以及 CPU/GPU 环境。
 
 ## 文档
 

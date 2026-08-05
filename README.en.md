@@ -97,7 +97,7 @@ See the [Deployment Guide](docs/smokefire-Deployment-Guide.pdf) for the complete
 
 Start with 2-4 representative existing cameras and observe them for 14 days across day, night, backlight, occlusion, distance, and common interference conditions. Review false alerts, missed detections, evidence clips, and resource use before expanding. This is a suggested validation process, not a site-capacity or commercial-service commitment.
 
-For deployment or pilot coordination, [open an Issue](https://github.com/newtv-ai/smokefire/issues/new?title=Deployment%20or%20pilot%20inquiry) with the city, industry, planned feed count, current video integration method, and CPU/GPU environment. No customer case is currently published; real cases will be added only after a pilot and customer permission.
+For deployment or pilot coordination, [open an Issue](https://github.com/newtv-ai/smokefire/issues/new?title=Deployment%20or%20pilot%20inquiry) with the city, industry, planned feed count, current video integration method, and CPU/GPU environment.
 
 ## Documentation
 
