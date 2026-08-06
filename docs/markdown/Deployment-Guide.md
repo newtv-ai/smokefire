@@ -59,7 +59,7 @@ Each bundle includes prebuilt smokefire and go2rtc Docker images, both model wei
 
 - `smokefire-source-1.0.0.zip`: about 90 MB, containing the application source, front end, both model weights, install and start scripts, and the manuals.
 
-The source bundle is far smaller, but the host must provide Python 3.12 and ffmpeg, and the **first dependency install needs internet access** (about 1 GB for CPU, 3 GB for GPU). See section 4.
+The source bundle is far smaller, but the host must provide Python and ffmpeg, and the **first dependency install needs internet access** (about 1 GB for CPU, 3 GB for GPU). See section 4.
 
 Both routes deliver the same features; only the dependency isolation differs. The single functional difference is described in 4.6.
 
@@ -357,7 +357,7 @@ system libraries inside an image, while this route uses the host's own Python.
 
 | | Docker route | Source route |
 |---|---|---|
-| Target host needs | Docker + Compose v2 | Python 3.12, ffmpeg, plus libgl1 on Linux |
+| Target host needs | Docker + Compose v2 | Python, ffmpeg, plus libgl1 on Linux |
 | Internet needed on first run | No, images ship with the bundle | **Yes**, about 1 GB of dependencies (3 GB for GPU) |
 | Bundle size | ~913 MB CPU / ~90 MB GPU plus 4.8 GB of parts | **~90 MB** |
 | Upgrading | Swap the image | Extract a new directory and reinstall |
@@ -368,7 +368,7 @@ The install script checks each item and stops with the command to fix it.
 
 | Dependency | Why | How to install |
 |---|---|---|
-| Python 3.12 | The lock files are generated for 3.12; other versions are rejected | Windows `winget install Python.Python.3.12`; Linux use the distribution package manager |
+| Python | **3.12 or 3.13 is recommended**: both are verified end to end and ship a hashed lock file. The script does not gate on the version. Without a matching lock file it installs from `requirements.txt` instead, with no pinning and no hash verification, and says so. 3.14 currently fails to install because this project pins `numpy==2.2.6`, which has no prebuilt 3.14 package | Windows `winget install Python.Python.3.12`; Linux use the distribution package manager |
 | ffmpeg + ffprobe | Required for the H.264 evidence chain of event recordings; both are needed | Windows `winget install Gyan.FFmpeg`; Debian/Ubuntu `sudo apt-get install -y ffmpeg` |
 | libgl1, libglib2.0-0 | Required by OpenCV, **Linux only** | `sudo apt-get install -y libgl1 libglib2.0-0` |
 | Internet access | First dependency install only | ~1 GB CPU, ~3 GB GPU |
@@ -385,7 +385,8 @@ D:\smokefire-source  smokefire\              application source
   models\                 both model weights
   deploy\                 install and service-registration scripts
   docs\                   Chinese and English manual PDFs
-  requirements-*.lock      four platform lock files, selected automatically
+  requirements-*.lock      lock files for Python 3.12
+  requirements\             lock files for 3.10, 3.11, 3.13 and 3.14
   .env.example             configuration template
   start.ps1  start.sh      one-command entry points
   SHA256SUMS
@@ -475,7 +476,7 @@ Linux use:
 
 | Symptom | Cause | Action |
 |---|---|---|
-| Message that the lock files need Python 3.12 | A different version is installed | Install 3.12 and confirm with `python --version` |
+| Message that no lock file matches the interpreter | This Python version has no pregenerated lock file | Not an error: the install continues without hash verification. Switch to 3.12 or 3.13 for the fully verified path |
 | ffmpeg/ffprobe not detected | Not installed, or not on PATH | Install per 4.1, then **open a new terminal** |
 | Dependency install fails partway | Usually the network | Retry with `-PipMirror` / `--pip-mirror` |
 | Linux reports a missing libGL | System library not installed | `sudo apt-get install -y libgl1 libglib2.0-0` |

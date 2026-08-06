@@ -97,7 +97,7 @@ Release 提供两条部署路线，按目标机情况二选一。两条路功能
 **B. 源码包** —— 不想在目标机装 Docker 时用，约 90 MB。
 
 1. 下载 `smokefire-source-1.0.0.zip` 并解压。
-2. 目标机需自备 Python 3.12 与 ffmpeg（Linux 还要 libgl1）；首次装依赖需要联网。
+2. 目标机需自备 Python（推荐 3.12 或 3.13）与 ffmpeg（Linux 还要 libgl1）；首次装依赖需要联网。
 3. 解压后运行一条命令：`start.ps1`（Windows）或 `./start.sh`（Linux），加 `-Gpu` / `--gpu` 走 GPU。
 4. 首次会自动建 venv 并装依赖，之后同一条命令就是日常启动命令。
 

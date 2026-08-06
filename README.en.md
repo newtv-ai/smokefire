@@ -96,7 +96,7 @@ The Release offers two deployment routes with identical features. Pick the one t
 **B. Source bundle** - about 90 MB, for hosts that should not run Docker.
 
 1. Download and extract `smokefire-source-1.0.0.zip`.
-2. The host must provide Python 3.12 and ffmpeg (plus libgl1 on Linux); the first dependency install needs internet access.
+2. The host must provide Python (3.12 or 3.13 recommended) and ffmpeg (plus libgl1 on Linux); the first dependency install needs internet access.
 3. Run one command: `start.ps1` on Windows or `./start.sh` on Linux, adding `-Gpu` / `--gpu` for the CUDA build.
 4. The first run creates a venv and installs dependencies; the same command is the everyday launcher afterwards.
 
