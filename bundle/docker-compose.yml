@@ -72,7 +72,6 @@ services:
       SMOKEFIRE_NOTIFIER_DRAIN_SEC: ${SMOKEFIRE_NOTIFIER_DRAIN_SEC:-5}
       SMOKEFIRE_NOTIFIER_OUTBOX_MAX: ${SMOKEFIRE_NOTIFIER_OUTBOX_MAX:-10000}
     volumes:
-      - ./models:/app/models:ro
       - smokefire-data:/app/data
     stop_grace_period: ${SMOKEFIRE_STOP_GRACE_PERIOD:-180s}
 
