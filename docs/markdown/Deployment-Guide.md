@@ -371,6 +371,8 @@ The install script checks each item and stops with the command to fix it.
 | Python | **3.11 through 3.14 all work**, each with its own hashed lock file; **3.12 or 3.13 is recommended** as both are verified end to end. The script does not gate on the version. Without a matching lock file it installs from `requirements.txt` instead, with no pinning and no hash verification, and says so | Windows `winget install Python.Python.3.12`; Linux use the distribution package manager |
 | ffmpeg + ffprobe | Required for the H.264 evidence chain of event recordings; both are needed | **No need to install these first.** If they are absent, the installer puts them inside `.venv` — no admin rights, no change to the system PATH. To use your own build instead, install it and put it on PATH first: Windows `winget install Gyan.FFmpeg`; Debian/Ubuntu `sudo apt-get install -y ffmpeg` |
 | libgl1, libglib2.0-0 | Required by OpenCV, **Linux only** | `sudo apt-get install -y libgl1 libglib2.0-0` |
+| MSVC runtime | **Windows only.** torch's `c10.dll` depends on it; without it startup fails with `WinError 1114` | `winget install --id Microsoft.VCRedist.2015+.x64` |
+| go2rtc | Optional, needed only when cameras/NVRs cannot sustain two upstream sessions per feed | **No need to install it first**: the installer downloads it (same version as the Docker image, sha256 verified). A failure here does not affect the service |
 | Internet access | First dependency install only | ~1 GB CPU, ~3 GB GPU |
 | NVIDIA driver | **GPU only**, must support CUDA 12.8 | Vendor driver |
 
@@ -398,8 +400,7 @@ Windows, from an already open PowerShell window:
 
 ```powershell
 cd D:\smokefire-source
-powershell -ExecutionPolicy Bypass -File .\start.ps1          # CPU
-powershell -ExecutionPolicy Bypass -File .\start.ps1 -Gpu     # NVIDIA GPU
+powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
 Linux:
@@ -407,9 +408,18 @@ Linux:
 ```bash
 cd /opt/smokefire-source
 chmod +x start.sh
-./start.sh                 # CPU
-./start.sh --gpu           # NVIDIA GPU
+./start.sh
 ```
+
+**You do not pick CPU or GPU.** The script decides from whether `nvidia-smi`
+runs: a usable NVIDIA card gets the CUDA build, anything else gets the CPU
+build. Force it with `-Cpu` / `--cpu` or `-Gpu` / `--gpu`; asking for GPU on a
+machine without an NVIDIA card fails immediately rather than downloading 2.5 GB
+that cannot work.
+
+Intel integrated graphics and AMD cards take no part in inference — the torch
+builds shipped here are CPU and CUDA only, so those machines correctly run the
+CPU build.
 
 On a slow link, add the mirror flag; it routes both PyPI and the PyTorch wheels
 through a mainland-China mirror:
@@ -484,7 +494,9 @@ Linux use:
 | Symptom | Cause | Action |
 |---|---|---|
 | Message that no lock file matches the interpreter | This Python version has no pregenerated lock file | Not an error: the install continues without hash verification. Switch to 3.12 or 3.13 for the fully verified path |
+| `OSError: [WinError 1114]` on startup pointing at `torch\lib\c10.dll` | The MSVC runtime is missing (`c10.dll` needs `MSVCP140`, `VCRUNTIME140`, `VCRUNTIME140_1`). **Unrelated to the graphics card** — the CPU build hits it too | `winget install --id Microsoft.VCRedist.2015+.x64`, or install <https://aka.ms/vs/17/release/vc_redist.x64.exe>, then rerun. Dependencies do not need reinstalling |
 | Bundled ffmpeg reported unusable | No prebuilt binary for this architecture (for example arm64) | Install ffmpeg yourself per 4.1, then **open a new terminal** and rerun |
+| go2rtc download reported as failed | GitHub unreachable | Optional component; the service runs without it. Download it manually from the printed link if you need it |
 | `THESE PACKAGES DO NOT MATCH THE HASHES` | The download was cut short, so hash verification rejected the truncated file | Just rerun. Packages already downloaded sit in the pip cache and are not fetched again — only the incomplete one is. If it keeps failing, add `-CnMirror` / `--cn-mirror` |
 | Dependency install fails partway | Usually the network | Retry with `-CnMirror` / `--cn-mirror` |
 | Linux reports a missing libGL | System library not installed | `sudo apt-get install -y libgl1 libglib2.0-0` |
