@@ -369,7 +369,7 @@ The install script checks each item and stops with the command to fix it.
 | Dependency | Why | How to install |
 |---|---|---|
 | Python | **3.11 through 3.14 all work**, each with its own hashed lock file; **3.12 or 3.13 is recommended** as both are verified end to end. The script does not gate on the version. Without a matching lock file it installs from `requirements.txt` instead, with no pinning and no hash verification, and says so | Windows `winget install Python.Python.3.12`; Linux use the distribution package manager |
-| ffmpeg + ffprobe | Required for the H.264 evidence chain of event recordings; both are needed | Windows `winget install Gyan.FFmpeg`; Debian/Ubuntu `sudo apt-get install -y ffmpeg` |
+| ffmpeg + ffprobe | Required for the H.264 evidence chain of event recordings; both are needed | **No need to install these first.** If they are absent, the installer puts them inside `.venv` — no admin rights, no change to the system PATH. To use your own build instead, install it and put it on PATH first: Windows `winget install Gyan.FFmpeg`; Debian/Ubuntu `sudo apt-get install -y ffmpeg` |
 | libgl1, libglib2.0-0 | Required by OpenCV, **Linux only** | `sudo apt-get install -y libgl1 libglib2.0-0` |
 | Internet access | First dependency install only | ~1 GB CPU, ~3 GB GPU |
 | NVIDIA driver | **GPU only**, must support CUDA 12.8 | Vendor driver |
@@ -411,15 +411,22 @@ chmod +x start.sh
 ./start.sh --gpu           # NVIDIA GPU
 ```
 
-Add a pip mirror on a slow link:
+On a slow link, add the mirror flag; it routes both PyPI and the PyTorch wheels
+through a mainland-China mirror:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\start.ps1 -PipMirror https://mirrors.aliyun.com/pypi/simple/
+powershell -ExecutionPolicy Bypass -File .\start.ps1 -CnMirror
 ```
 
 ```bash
-./start.sh --pip-mirror https://mirrors.aliyun.com/pypi/simple/
+./start.sh --cn-mirror
 ```
+
+The largest dependency is torch (about 110 MB for the CPU wheel alone, more for
+GPU). It is not hosted on PyPI, so `-PipMirror` does not cover it — that is why
+the combined flag exists. To point at different sources, override them
+separately with `-PipMirror` / `--pip-mirror` (PyPI) and
+`-TorchMirror` / `--torch-mirror` (the torch wheel directory).
 
 The **first run** creates `.venv`, installs the locked dependencies (measured at about
 1.1 GB for CPU, a good ten minutes depending on the link) and then starts the service.
@@ -477,8 +484,9 @@ Linux use:
 | Symptom | Cause | Action |
 |---|---|---|
 | Message that no lock file matches the interpreter | This Python version has no pregenerated lock file | Not an error: the install continues without hash verification. Switch to 3.12 or 3.13 for the fully verified path |
-| ffmpeg/ffprobe not detected | Not installed, or not on PATH | Install per 4.1, then **open a new terminal** |
-| Dependency install fails partway | Usually the network | Retry with `-PipMirror` / `--pip-mirror` |
+| Bundled ffmpeg reported unusable | No prebuilt binary for this architecture (for example arm64) | Install ffmpeg yourself per 4.1, then **open a new terminal** and rerun |
+| `THESE PACKAGES DO NOT MATCH THE HASHES` | The download was cut short, so hash verification rejected the truncated file | Just rerun. Packages already downloaded sit in the pip cache and are not fetched again — only the incomplete one is. If it keeps failing, add `-CnMirror` / `--cn-mirror` |
+| Dependency install fails partway | Usually the network | Retry with `-CnMirror` / `--cn-mirror` |
 | Linux reports a missing libGL | System library not installed | `sudo apt-get install -y libgl1 libglib2.0-0` |
 
 ---
