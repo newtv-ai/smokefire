@@ -477,9 +477,14 @@ egister-service.ps1`, which needs administrator rights and NSSM (`winget install
 
 ### 4.6 The one functional difference from the Docker route
 
-**Bundled go2rtc mode** requires you to supply a go2rtc executable yourself and run it at
-the address `SMOKEFIRE_GO2RTC_API` points to in `.env`. The Docker route ships a go2rtc
-container instead. The other two video modes, direct RTSP and an existing site go2rtc,
+There is one, and it only affects **bundled go2rtc mode**. The installer downloads the
+go2rtc executable for you (same version as the Docker image, sha256 verified), but does
+**not** start it. Register it as a service per 4.5 — `deploy\windowsegister-go2rtc-service.ps1`
+on Windows, `deploy/linux/go2rtc.service` on Linux — and make sure it listens on the
+address `SMOKEFIRE_GO2RTC_API` points to in `.env`. On the Docker route go2rtc is a
+container in the same compose file, started and stopped with the service.
+
+The other two video modes, direct RTSP and an existing site go2rtc, are unaffected and
 behave exactly as sections 6 and 7 describe.
 
 ### 4.7 When something fails
