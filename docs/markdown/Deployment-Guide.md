@@ -479,7 +479,8 @@ egister-service.ps1`, which needs administrator rights and NSSM (`winget install
 
 There is one, and it only affects **bundled go2rtc mode**. The installer downloads the
 go2rtc executable for you (same version as the Docker image, sha256 verified), but does
-**not** start it. Register it as a service per 4.5 — `deploy\windowsegister-go2rtc-service.ps1`
+**not** start it. Register it as a service per 4.5 — `deploy\windows
+egister-go2rtc-service.ps1`
 on Windows, `deploy/linux/go2rtc.service` on Linux — and make sure it listens on the
 address `SMOKEFIRE_GO2RTC_API` points to in `.env`. On the Docker route go2rtc is a
 container in the same compose file, started and stopped with the service.
@@ -489,8 +490,25 @@ behave exactly as sections 6 and 7 describe.
 
 ### 4.7 When something fails
 
-`start.ps1` records the whole run to `start-log.txt`; send that one file to support. On
-Linux use:
+**Run the self-check first.** It inspects nine categories of prerequisites (system,
+Python, VC++ runtime version, torch, ffmpeg, model checksums, system libraries, port
+availability, configuration) and states **what is wrong and what to do about it**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagnose.ps1
+```
+```bash
+chmod +x diagnose.sh && ./diagnose.sh
+```
+
+Output goes to `diagnose-report.txt`. When startup fails the `start` script runs it
+**automatically** — you do not have to invoke it yourself.
+
+For a fuller checklist organised by the exact message you saw, see **`TROUBLESHOOTING.md`**
+(or **`问题速查.md`**) in the bundle.
+
+`start.ps1` records the whole run to `start-log.txt`; send that file together with
+`diagnose-report.txt` when reporting a problem. On Linux use:
 
 ```bash
 ./start.sh 2>&1 | tee start-log.txt
@@ -499,7 +517,7 @@ Linux use:
 | Symptom | Cause | Action |
 |---|---|---|
 | Message that no lock file matches the interpreter | This Python version has no pregenerated lock file | Not an error: the install continues without hash verification. Switch to 3.12 or 3.13 for the fully verified path |
-| `OSError: [WinError 1114]` on startup pointing at `torch\lib\c10.dll` | The MSVC runtime is missing (`c10.dll` needs `MSVCP140`, `VCRUNTIME140`, `VCRUNTIME140_1`). **Unrelated to the graphics card** — the CPU build hits it too | `winget install --id Microsoft.VCRedist.2015+.x64`, or install <https://aka.ms/vs/17/release/vc_redist.x64.exe>, then rerun. Dependencies do not need reinstalling |
+| `OSError: [WinError 1114]` on startup pointing at `torch\lib\c10.dll` | The MSVC runtime is missing (`c10.dll` needs `MSVCP140`, `VCRUNTIME140`, `VCRUNTIME140_1`). **Unrelated to the graphics card** — the CPU build hits it too | `winget install --id Microsoft.VCRedist.2015+.x64`, or install <https://aka.ms/vs/17/release/vc_redist.x64.exe>, then **restart the machine** (observed on a real site: rerunning immediately still failed; after a restart the same `.venv` worked). Dependencies do not need reinstalling |
 | Bundled ffmpeg reported unusable | No prebuilt binary for this architecture (for example arm64) | Install ffmpeg yourself per 4.1, then **open a new terminal** and rerun |
 | go2rtc download reported as failed | GitHub unreachable | Optional component; the service runs without it. Download it manually from the printed link if you need it |
 | `THESE PACKAGES DO NOT MATCH THE HASHES` | The download was cut short, so hash verification rejected the truncated file | Just rerun. Packages already downloaded sit in the pip cache and are not fetched again — only the incomplete one is. If it keeps failing, add `-CnMirror` / `--cn-mirror` |
